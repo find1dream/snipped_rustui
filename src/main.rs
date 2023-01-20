@@ -8,10 +8,32 @@ use tui::{
     backend::{Backend, CrosstermBackend},
     layout::{Alignment, Constraint, Direction, Layout},
     style::{Color, Modifier, Style},
-    text::Span,
-    widgets::{Block, BorderType, Borders},
+    text::{Span, Spans, Text},
+    widgets::{Block, List, ListItem, Paragraph, BorderType, Borders},
     Frame, Terminal,
 };
+use unicode_width::UnicodeWidthStr;
+
+enum InputMode {
+    Normal,
+    Editing
+}
+
+struct App {
+    input: String,
+    input_mode: InputMode,
+    messages: Vec<String>,
+}
+
+impl Default for App {
+    fn default() -> App {
+        App {
+            input: String::new(),
+            input_mode: InputMode::Normal,
+            messages: Vec::new(),
+        }
+    }
+}
 
 fn main() -> Result<(), Box<dyn Error>> {
     // setup terminal
@@ -22,7 +44,8 @@ fn main() -> Result<(), Box<dyn Error>> {
     let mut terminal = Terminal::new(backend)?;
 
     // create app and run it
-    let res = run_app(&mut terminal);
+    let app = App::default();
+    let res = run_app(&mut terminal, app);
 
     // restore terminal
     disable_raw_mode()?;
@@ -40,19 +63,31 @@ fn main() -> Result<(), Box<dyn Error>> {
     Ok(())
 }
 
-fn run_app<B: Backend>(terminal: &mut Terminal<B>) -> io::Result<()> {
+fn run_app<B: Backend>(terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
     loop {
-        terminal.draw(ui)?;
+        terminal.draw(|f| ui(f, &app))?;
 
         if let Event::Key(key) = event::read()? {
-            if let KeyCode::Char('q') = key.code {
-                return Ok(());
+            match app.input_mode {
+                InputMode::Normal => match key.code {
+                    KeyCode::Char('e') => app.input_mode = InputMode::Editing,
+                    KeyCode::Char('q') => {return Ok(());}
+                    _ => {}
+
+                }
+                InputMode::Editing => match key.code {
+                    KeyCode::Enter => {app.messages.push(app.input.drain(..).collect());}
+                    KeyCode::Char(c) => {app.input.push(c);}
+                    KeyCode::Backspace => {app.input.pop();}
+                    KeyCode::Esc => {app.input_mode = InputMode::Normal;}
+                    _ => {}
+                }
             }
         }
     }
 }
 
-fn ui<B: Backend>(f: &mut Frame<B>) {
+fn ui<B: Backend>(f: &mut Frame<B>, app: &App) {
     // Wrapping block for a group
     // Just draw the block and the group on the same area and build the group
     // with at least a margin of 1
@@ -75,22 +110,34 @@ fn ui<B: Backend>(f: &mut Frame<B>) {
         .constraints([Constraint::Length(3), Constraint::Min(1)].as_ref())
         .split(chunks[0]);
 
-    let block = Block::default()
-        .title("Search")
-        .title_alignment(Alignment::Center)
-        .borders(Borders::ALL)
-        .border_type(BorderType::Plain);
-     //   .border_style(Style::default().fg(Color::White))
-     //   .style(Style::default().bg(Color::Green));
-    f.render_widget(block, left_chunks[0]);
+    let input = Paragraph::new(app.input.as_ref())
+        .style(match app.input_mode {
+            InputMode::Normal => Style::default(),
+            InputMode::Editing => Style::default().fg(Color::Yellow)
+        })
+        .block(Block::default().borders(Borders::ALL).title("Search"));
+    f.render_widget(input, left_chunks[0]);
+    match app.input_mode {
+        InputMode::Normal => {}
+        InputMode::Editing => {
+            f.set_cursor(
+                left_chunks[0].x + app.input.width() as u16 + 1,
+                left_chunks[0].y + 1
+            )
+        }
+    }
 
-    let block = Block::default()
-        .title("List")
-        .title_alignment(Alignment::Center)
-     //   .border_style(Style::default().fg(Color::White))
-        .borders(Borders::ALL)
-        .border_type(BorderType::Plain);
-    f.render_widget(block, left_chunks[1]);
+    let messages: Vec<ListItem> = app
+        .messages
+        .iter()
+        .enumerate()
+        .map(|(i, m)| {
+            let content = vec![Spans::from(Span::raw(format!("{}: {}", i, m)))];
+            ListItem::new(content)
+        })
+        .collect();
+    let messages = List::new(messages).block(Block::default().borders(Borders::ALL).title("List"));
+    f.render_widget(messages, left_chunks[1]);
 
     // Bottom right block with styled left and right border
     let block = Block::default()
