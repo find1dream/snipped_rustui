@@ -14,7 +14,7 @@ use std::ffi::OsStr;
 use fuzzy_matcher::FuzzyMatcher;
 use fuzzy_matcher::skim::SkimMatcherV2;
 use std::thread;
-
+use arboard::Clipboard;
 
 use crate::view::{App, ui};
 use crate::key::InputMode;
@@ -72,6 +72,9 @@ pub fn run_app<B: Backend>(base_url: &str, terminal: &mut Terminal<B>, mut app: 
     // init git
     git_pull(base_url);
 
+    // init clipboard
+    let mut clipboard = Clipboard::new().expect("cannot open clipboard");
+
     let matcher = SkimMatcherV2::default();
     let mut note = Note::new(base_url, "", "", "");
     app.list.items = load_all_markdown(base_url);
@@ -94,7 +97,25 @@ pub fn run_app<B: Backend>(base_url: &str, terminal: &mut Terminal<B>, mut app: 
                         app.list.items.push(note.clone()); 
                         app.list.set_selected_num(app.list.items.len() - 1); // select last new item
                         refresh_ui();
-                        
+                    }
+                    KeyEvent {code: KeyCode::Char('d'), modifiers: KeyModifiers::CONTROL, kind: pressed, state: none} => {
+                        // delete note
+                        if let Some(num) = app.list.get_selected_num() {
+                            app.list.items[num].delete();
+                          //  app.list.items = load_all_markdown(base_url);
+                            app.list.delete(num);
+                            match num > 0 {
+                                true => {
+                                    app.list.set_selected_num(num - 1);
+                                    note = app.list.items[num - 1].clone();
+                                } // select last new item
+                                false => {
+                                    app.list.set_selected_num(0);
+                                    note = Note::new(base_url, "", "", "");
+                                }
+                            }
+                        }
+                        refresh_ui();
                     }
                     KeyEvent {code: KeyCode::Char('s'), modifiers: KeyModifiers::CONTROL, kind: pressed, state: none} => {
                         // save
@@ -163,9 +184,11 @@ pub fn run_app<B: Backend>(base_url: &str, terminal: &mut Terminal<B>, mut app: 
                         }
                         KeyEvent {code: KeyCode::Char('c'), modifiers: KeyModifiers::CONTROL, kind: pressed, state: none} => {
                             // copy
+                            clipboard.set_text(&note.contents).unwrap();
                         }
                         KeyEvent {code: KeyCode::Char('v'), modifiers: KeyModifiers::CONTROL, kind: pressed, state: none} => {
                             // paste
+                            note.contents = clipboard.get_text().unwrap().to_string();
                         }
                         _ => {}
                     }

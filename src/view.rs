@@ -24,8 +24,8 @@ impl<T> StatefulList<T> {
     }
 
     pub fn set_selected_num(&mut self, num: usize) {
-        self.selected_num = Some(num);
-        self.state.select(Some(num));
+        self.selected_num = Some(num as usize);
+        self.state.select(Some(num as usize));
     }
 
     pub fn with_items(items: Vec<T>) -> StatefulList<T> {
@@ -60,6 +60,10 @@ impl<T> StatefulList<T> {
             None => 0
         };
         self.set_selected_num(i);
+    }
+
+    pub fn delete(&mut self, index: usize) {
+        self.items.remove(index);
     }
 
     pub fn unselect(&mut self) {
