@@ -83,6 +83,8 @@ fn load_all_markdown(base_url: &str) -> Vec<Note> {
 #[allow(unused_variables)]
 pub fn run_app<B: Backend>(base_url: &str, terminal: &mut Terminal<B>, mut app: App) -> io::Result<()> {
     // init git
+    println!("");
+    println!("  Sync with remote server...");
     git_pull(base_url);
 
     // init clipboard
