@@ -53,30 +53,3 @@ fn main() -> Result<(), Box<dyn Error>> {
 
     Ok(())
 }
-
-//#[allow(unused_must_use)]
-//fn main() {
-//
-//    let env_data = match env::EnvData::check_env_file_exists() {
-//        true  => env::EnvData::load().unwrap(),
-//        false => env::EnvData::new().unwrap()
-//    };
-//
-//    let git_path = env_data.get_git_folder_path();
-//    let language = "python";
-//    let title = "hello";
-//    let contents = "print('hello world5')";
-//    let note = note::Note::new(&git_path, 
-//             language, 
-//             title, 
-//             contents);
-//
-//    if let Ok(path) = note.save() {
-//        println!("{}", &git_path);
-//        git::git_add_all(&git_path);
-//        git::git_commit(&git_path, "push test3");
-//        git::git_pull(&git_path);
-//        git::git_push(&git_path);
-//    }
-//    
-//}

@@ -22,7 +22,7 @@ use crate::note::Note;
 use crate::git::{git_add_all, git_commit, git_pull, git_push};
 
 
-fn update_input_buffer(app: &mut App, buffer: &mut String, key: &KeyEvent) {
+fn update_input_buffer(app: &mut App, buffer: &mut String, key: &KeyEvent, clipboard: &mut Clipboard) {
     match key {
         KeyEvent {code: KeyCode::Char('u'), modifiers: KeyModifiers::CONTROL, kind: pressed, state: none} => {
             // clear buffer
@@ -44,6 +44,15 @@ fn update_input_buffer(app: &mut App, buffer: &mut String, key: &KeyEvent) {
         KeyEvent {code: KeyCode::Tab, modifiers: KeyModifiers::NONE, kind: pressed, state: none} => {app.input_mode = app.input_mode.next_mode();}
         KeyEvent {code: KeyCode::Esc, modifiers: KeyModifiers::NONE, kind: pressed, state: none} => {
             app.input_mode = InputMode::Normal;
+        }
+        KeyEvent {code: KeyCode::Char('c'), modifiers: KeyModifiers::CONTROL, kind: pressed, state: none} => {
+            // copy
+            clipboard.set_text(buffer.as_str()).unwrap();
+        }
+        KeyEvent {code: KeyCode::Char('v'), modifiers: KeyModifiers::CONTROL, kind: pressed, state: none} => {
+            // paste
+            buffer.clear();
+            buffer.push_str(clipboard.get_text().unwrap().as_str());
         }
         _ => {}
     }
@@ -162,7 +171,7 @@ pub fn run_app<B: Backend>(base_url: &str, terminal: &mut Terminal<B>, mut app: 
 
                 }
                 InputMode::EditingSearch => {
-                    update_input_buffer(&mut app, &mut search_text, &key);
+                    update_input_buffer(&mut app, &mut search_text, &key, &mut clipboard);
                     match key {
                         KeyEvent {code: KeyCode::Enter, modifiers: KeyModifiers::NONE, kind: pressed, state: none} => {
                             app.list.items = app.list.items.iter().enumerate().filter_map(|(i, x)| 
@@ -178,21 +187,13 @@ pub fn run_app<B: Backend>(base_url: &str, terminal: &mut Terminal<B>, mut app: 
                         app.list.items = load_all_markdown(base_url);
                     }
                 }
-                InputMode::EditingTitle => update_input_buffer(&mut app, &mut note.title, &key),
-                InputMode::EditingLanguage => update_input_buffer(&mut app, &mut note.language, &key),
+                InputMode::EditingTitle => update_input_buffer(&mut app, &mut note.title, &key, &mut clipboard),
+                InputMode::EditingLanguage => update_input_buffer(&mut app, &mut note.language, &key, &mut clipboard),
                 InputMode::EditingCode => {
-                    update_input_buffer(&mut app, &mut note.contents, &key);
+                    update_input_buffer(&mut app, &mut note.contents, &key, &mut clipboard);
                     match key {
                         KeyEvent {code: KeyCode::Enter, modifiers: KeyModifiers::NONE, kind: pressed, state: none} => {
                             note.contents.push('\n');
-                        }
-                        KeyEvent {code: KeyCode::Char('c'), modifiers: KeyModifiers::CONTROL, kind: pressed, state: none} => {
-                            // copy
-                            clipboard.set_text(&note.contents).unwrap();
-                        }
-                        KeyEvent {code: KeyCode::Char('v'), modifiers: KeyModifiers::CONTROL, kind: pressed, state: none} => {
-                            // paste
-                            note.contents = clipboard.get_text().unwrap().to_string();
                         }
                         _ => {}
                     }
