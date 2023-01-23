@@ -24,6 +24,10 @@ use crate::git::{git_add_all, git_commit, git_pull, git_push};
 
 fn update_input_buffer(app: &mut App, buffer: &mut String, key: &KeyEvent) {
     match key {
+        KeyEvent {code: KeyCode::Char('u'), modifiers: KeyModifiers::CONTROL, kind: pressed, state: none} => {
+            // clear buffer
+            buffer.clear();
+        }
         KeyEvent {code: KeyCode::Enter, modifiers: KeyModifiers::NONE, kind: pressed, state: none} => {
         //      let input:String = app.input.drain(..).collect();
         //      app.list.items.push(Note{title: input.clone(), language:"python".to_string(), contents: input.clone()} );

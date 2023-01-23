@@ -155,6 +155,11 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App, note: &Note, search_text:
     f.render_widget(language, right_chunks[1]);
 
     let contents = Paragraph::new(note.contents.as_ref())
+        .style(match app.input_mode {
+            InputMode::Normal => Style::default(),
+            InputMode::EditingCode => Style::default().fg(Color::Yellow),
+            _ => Style::default()
+        })
         .block(Block::default()
             .borders(Borders::ALL)
             .title(app.input_mode.to_string())
