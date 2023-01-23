@@ -1,6 +1,6 @@
 ## Introduction
 This is a code snippet save&&sync cli-tool based on rust. This tool can search/create/edit/delete/sync your snippets and should run on Linux/Windows/MacOS.
-![rust snippet tool](https://github.com/find1dream/snipped_rustui/image/rust_snippet_tool.png)
+![rust snippet tool](https://github.com/find1dream/snipped_rustui/blob/main/image/rust_snippet_tool.png)
 
 ## How to initialize the tool
 1. create a database folder and init it with `touch .gitignore && git init && git add . && git commit -m "first commit" && git branch -M main`
