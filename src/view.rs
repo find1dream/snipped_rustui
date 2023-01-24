@@ -173,8 +173,8 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App, note: &Note, search_text:
             .borders(Borders::ALL)
             .title(app.input_mode.to_string())
             .title_alignment(Alignment::Center))
-        .alignment(Alignment::Left)
-        .wrap(Wrap { trim: true });
+        .alignment(Alignment::Left);
+     //   .wrap(Wrap { trim: true });
     f.render_widget(contents, right_chunks[2]);
 
     match app.input_mode {
