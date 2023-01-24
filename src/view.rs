@@ -12,6 +12,8 @@ use unicode_width::UnicodeWidthStr;
 use crate::note::Note;
 use crate::key::InputMode;
 
+use regex::Regex;
+
 pub struct StatefulList<T> {
     selected_num: Option<usize>,
     state: ListState,
@@ -154,7 +156,14 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App, note: &Note, search_text:
             .borders(Borders::NONE));
     f.render_widget(language, right_chunks[1]);
 
-    let contents = Paragraph::new(note.contents.as_ref())
+    let mut replaced_contents = note.contents.clone();
+    let re = Regex::new(r"(\n\s*)").unwrap();
+    for caps in re.captures_iter(note.contents.as_str()) {
+        let start = caps.get(0).unwrap().start() + 1;
+        let end = caps.get(0).unwrap().end();
+        replaced_contents.replace_range(start..end, &".".repeat(end - start));
+    }
+    let contents = Paragraph::new(replaced_contents.as_ref())
         .style(match app.input_mode {
             InputMode::Normal => Style::default(),
             InputMode::EditingCode => Style::default().fg(Color::Yellow),
