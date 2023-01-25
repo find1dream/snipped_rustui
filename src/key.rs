@@ -15,9 +15,8 @@ impl fmt::Display for InputMode {
     }
 }
 
+#[allow(dead_code)]
 impl InputMode {
-    const modes: [InputMode; 5] = [Self::Normal, Self::EditingSearch, Self::EditingTitle, Self::EditingLanguage, Self::EditingCode];
-
     pub fn next_mode(&self) -> InputMode {
         match self {
             Self::Normal => Self::EditingSearch,

@@ -1,5 +1,5 @@
 use std::fs;
-use std::io::{Read, Write, stdin};
+use std::io::{Read, Write};
 use std::result::Result;
 use std::error::Error;
 use std::fs::{File, OpenOptions};

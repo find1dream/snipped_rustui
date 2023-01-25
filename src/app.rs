@@ -3,8 +3,6 @@ use crossterm::{
 };
 use std::io;
 use std::io::{stdout, Write};
-use std::fs::{self, DirEntry};
-use std::path::Path;
 use tui::{
     backend::{Backend},
     Terminal,
@@ -24,32 +22,32 @@ use crate::git::{git_add_all, git_commit, git_pull, git_push};
 
 fn update_input_buffer(app: &mut App, buffer: &mut String, key: &KeyEvent, clipboard: &mut Clipboard) {
     match key {
-        KeyEvent {code: KeyCode::Char('u'), modifiers: KeyModifiers::CONTROL, kind: pressed, state: none} => {
+        KeyEvent {code: KeyCode::Char('u'), modifiers: KeyModifiers::CONTROL, kind: _pressed, state: _none} => {
             // clear buffer
             buffer.clear();
         }
-        KeyEvent {code: KeyCode::Enter, modifiers: KeyModifiers::NONE, kind: pressed, state: none} => {
+        KeyEvent {code: KeyCode::Enter, modifiers: KeyModifiers::NONE, kind: _pressed, state: _none} => {
         //      let input:String = app.input.drain(..).collect();
         //      app.list.items.push(Note{title: input.clone(), language:"python".to_string(), contents: input.clone()} );
         }
-        KeyEvent {code: KeyCode::Char(c), modifiers: KeyModifiers::NONE, kind: pressed, state: none} => {
+        KeyEvent {code: KeyCode::Char(c), modifiers: KeyModifiers::NONE, kind: _pressed, state: _none} => {
             buffer.push(*c);
         }
-        KeyEvent {code: KeyCode::Char(c), modifiers: KeyModifiers::SHIFT, kind: pressed, state: none} => {
+        KeyEvent {code: KeyCode::Char(c), modifiers: KeyModifiers::SHIFT, kind: _pressed, state: _none} => {
             buffer.push(*c);
         }
-        KeyEvent {code: KeyCode::Backspace, modifiers: KeyModifiers::NONE, kind: pressed, state: none} => {
+        KeyEvent {code: KeyCode::Backspace, modifiers: KeyModifiers::NONE, kind: _pressed, state: _none} => {
             buffer.pop();
         }
-        KeyEvent {code: KeyCode::Tab, modifiers: KeyModifiers::NONE, kind: pressed, state: none} => {app.input_mode = app.input_mode.next_mode();}
-        KeyEvent {code: KeyCode::Esc, modifiers: KeyModifiers::NONE, kind: pressed, state: none} => {
+        KeyEvent {code: KeyCode::Tab, modifiers: KeyModifiers::NONE, kind: _pressed, state: _none} => {app.input_mode = app.input_mode.next_mode();}
+        KeyEvent {code: KeyCode::Esc, modifiers: KeyModifiers::NONE, kind: _pressed, state: _none} => {
             app.input_mode = InputMode::Normal;
         }
-        KeyEvent {code: KeyCode::Char('c'), modifiers: KeyModifiers::CONTROL, kind: pressed, state: none} => {
+        KeyEvent {code: KeyCode::Char('c'), modifiers: KeyModifiers::CONTROL, kind: _pressed, state: _none} => {
             // copy
             clipboard.set_text(buffer.as_str()).unwrap();
         }
-        KeyEvent {code: KeyCode::Char('v'), modifiers: KeyModifiers::CONTROL, kind: pressed, state: none} => {
+        KeyEvent {code: KeyCode::Char('v'), modifiers: KeyModifiers::CONTROL, kind: _pressed, state: _none} => {
             // paste
             buffer.clear();
             buffer.push_str(clipboard.get_text().unwrap().as_str());
@@ -101,23 +99,22 @@ pub fn run_app<B: Backend>(base_url: &str, terminal: &mut Terminal<B>, mut app: 
             // adjust mode
             match app.input_mode {
                 InputMode::Normal => match key {
-                    KeyEvent {code: KeyCode::Enter, modifiers: KeyModifiers::NONE, kind: pressed, state: none} => {
+                    KeyEvent {code: KeyCode::Enter, modifiers: KeyModifiers::NONE, kind: _pressed, state: _none} => {
                         app.input_mode = InputMode::EditingTitle;
                     }
-                    KeyEvent {code: KeyCode::Tab, modifiers: KeyModifiers::NONE, kind: pressed, state: none} => {app.input_mode = app.input_mode.next_mode();}
-                    KeyEvent {code: KeyCode::Char('q'), modifiers: KeyModifiers::CONTROL, kind: pressed, state: none} => return Ok(()),
-                    KeyEvent {code: KeyCode::Char('n'), modifiers: KeyModifiers::CONTROL, kind: pressed, state: none} => {
+                    KeyEvent {code: KeyCode::Tab, modifiers: KeyModifiers::NONE, kind: _pressed, state: _none} => {app.input_mode = app.input_mode.next_mode();}
+                    KeyEvent {code: KeyCode::Char('q'), modifiers: KeyModifiers::CONTROL, kind: _pressed, state: _none} => return Ok(()),
+                    KeyEvent {code: KeyCode::Char('n'), modifiers: KeyModifiers::CONTROL, kind: _pressed, state: _none} => {
                         // create new note
                         note = Note::new(base_url, "", "", "");
                         app.list.items.push(note.clone()); 
                         app.list.set_selected_num(app.list.items.len() - 1); // select last new item
                         refresh_ui();
                     }
-                    KeyEvent {code: KeyCode::Char('d'), modifiers: KeyModifiers::CONTROL, kind: pressed, state: none} => {
+                    KeyEvent {code: KeyCode::Char('d'), modifiers: KeyModifiers::CONTROL, kind: _pressed, state: _none} => {
                         // delete note
                         if let Some(num) = app.list.get_selected_num() {
-                            app.list.items[num].delete();
-                          //  app.list.items = load_all_markdown(base_url);
+                            app.list.items[num].delete().expect("deleted file do not exist");
                             app.list.delete(num);
                             match num > 0 {
                                 true => {
@@ -132,7 +129,7 @@ pub fn run_app<B: Backend>(base_url: &str, terminal: &mut Terminal<B>, mut app: 
                         }
                         refresh_ui();
                     }
-                    KeyEvent {code: KeyCode::Char('s'), modifiers: KeyModifiers::CONTROL, kind: pressed, state: none} => {
+                    KeyEvent {code: KeyCode::Char('s'), modifiers: KeyModifiers::CONTROL, kind: _pressed, state: _none} => {
                         // save
                         match app.list.get_selected_num() {
                             Some(index) => {
@@ -152,17 +149,17 @@ pub fn run_app<B: Backend>(base_url: &str, terminal: &mut Terminal<B>, mut app: 
                         }
                         refresh_ui();
                     }
-                    KeyEvent {code: KeyCode::Left, modifiers: KeyModifiers::NONE, kind: pressed, state: none } => {
+                    KeyEvent {code: KeyCode::Left, modifiers: KeyModifiers::NONE, kind: _pressed, state: _none } => {
                         app.list.unselect();
                     }
-                    KeyEvent {code: KeyCode::Down, modifiers: KeyModifiers::NONE, kind: pressed, state: none} => {
+                    KeyEvent {code: KeyCode::Down, modifiers: KeyModifiers::NONE, kind: _pressed, state: _none} => {
                         app.list.next();
                         match app.list.get_selected_num() {
                             Some(index) => note = app.list.items[index].clone(),
                             None => {}
                         }
                     }
-                    KeyEvent {code: KeyCode::Up, modifiers: KeyModifiers::NONE, kind: pressed, state: none} => {
+                    KeyEvent {code: KeyCode::Up, modifiers: KeyModifiers::NONE, kind: _pressed, state: _none} => {
                         app.list.previous();
                         match app.list.get_selected_num() {
                             Some(index) => note = app.list.items[index].clone(),
@@ -175,7 +172,7 @@ pub fn run_app<B: Backend>(base_url: &str, terminal: &mut Terminal<B>, mut app: 
                 InputMode::EditingSearch => {
                     update_input_buffer(&mut app, &mut search_text, &key, &mut clipboard);
                     match key {
-                        KeyEvent {code: KeyCode::Enter, modifiers: KeyModifiers::NONE, kind: pressed, state: none} => {
+                        KeyEvent {code: KeyCode::Enter, modifiers: KeyModifiers::NONE, kind: _pressed, state: _none} => {
                             app.list.items = app.list.items.iter().enumerate().filter_map(|(i, x)| 
                                 match matcher.fuzzy_indices(&x.title, &search_text) {
                                     Some((score, indices)) => Some(app.list.items[i].clone()),
@@ -194,7 +191,7 @@ pub fn run_app<B: Backend>(base_url: &str, terminal: &mut Terminal<B>, mut app: 
                 InputMode::EditingCode => {
                     update_input_buffer(&mut app, &mut note.contents, &key, &mut clipboard);
                     match key {
-                        KeyEvent {code: KeyCode::Enter, modifiers: KeyModifiers::NONE, kind: pressed, state: none} => {
+                        KeyEvent {code: KeyCode::Enter, modifiers: KeyModifiers::NONE, kind: _pressed, state: _none} => {
                             note.contents.push('\n');
                         }
                         _ => {}
