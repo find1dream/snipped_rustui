@@ -133,6 +133,7 @@ pub fn run_app<B: Backend>(base_url: &str, terminal: &mut Terminal<B>, mut app: 
                         // save
                         match app.list.get_selected_num() {
                             Some(index) => {
+                                app.list.items[index].delete().expect("deleted file do not exist");
                                 app.list.items[index] = Note::new(base_url, &note.language, &note.title, &note.contents);
                                 if let Ok(path) = app.list.items[index].save() {
                                     let commit_contents = format!("update: {}, {}", note.language, note.title);
