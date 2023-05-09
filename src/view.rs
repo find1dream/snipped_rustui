@@ -157,11 +157,11 @@ pub fn ui<B: Backend>(f: &mut Frame<B>, app: &mut App, note: &Note, search_text:
     f.render_widget(language, right_chunks[1]);
 
     let mut replaced_contents = note.contents.clone();
-    let re = Regex::new(r"(\n\s*)").unwrap();
+	let re = Regex::new(r"(\n[ \t]\w*)").unwrap();
     for caps in re.captures_iter(note.contents.as_str()) {
         let start = caps.get(0).unwrap().start() + 1;
         let end = caps.get(0).unwrap().end();
-        replaced_contents.replace_range(start..end, &".".repeat(end - start));
+        replaced_contents.replace_range(start..end, &" ".repeat(end - start));
     }
     let contents = Paragraph::new(replaced_contents.as_ref())
         .style(match app.input_mode {
