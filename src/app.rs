@@ -129,6 +129,14 @@ pub fn run_app<B: Backend>(base_url: &str, terminal: &mut Terminal<B>, mut app: 
                         }
                         refresh_ui();
                     }
+                    KeyEvent {code: KeyCode::Char('c'), modifiers: KeyModifiers::CONTROL, kind: _pressed, state: _none} => {
+                        match app.list.get_selected_num() {
+                            Some(index) => {
+                                clipboard.set_text(note.contents.as_str()).unwrap();
+                            },
+                            None => {}
+                        }
+                    },
                     KeyEvent {code: KeyCode::Char('s'), modifiers: KeyModifiers::CONTROL, kind: _pressed, state: _none} => {
                         // save
                         match app.list.get_selected_num() {
